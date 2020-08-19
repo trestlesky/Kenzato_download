@@ -9,6 +9,7 @@ url = 'https://www.kenzato.uk/booru/explore/recent/'
 html = '/path/to/htmlfile.html'
 downloaded = '/path/to/downloaded.txt'
 downloaded_new = '/path/to/downloaded_new.txt'
+failed = '/path/to/failed.txt
 dest_dir = '/path/to/download/destination/'
 
 #  Timestamp for cron logs  #
@@ -95,60 +96,66 @@ else:
     print ("Found " + str(new_files) + " files to download!")
     print ("--- Downloading new images ---")
     for s in to_dl: 
-    
-        #  For each link in "to_dl", we need to find the image link and group tag  #
-        #  First, we feed link into BeautifulSoup #
-        r2 = requests.get(s)
-        r2_soup = bs4.BeautifulSoup(r2.text, "html.parser")
-
-        #  Parse HTML to find the image link  #
-        #  NOTE: I use the og:image tag because otherwise, there's a possibility to pull the .md file  #
-        #  which is not the actual image but a thumbnail preview.                                      #
-        image = r2_soup.find('meta', attrs={"property": "og:image"})
-        chara_link = (image.get('content'))
-
-        #  Parse HTML for group tag  #
-        tag = r2_soup.select('.description-meta')
-        tag2 = r2_soup.find('a', attrs={"rel":"tag"})
-        group = tag2.text
-
-        #  Generate the card file name using the img url  #
-        chara_card = chara_link.split('/')[-1]
-
-        #  Now we have image link, tag, and filename and can proceed to download  #
-        #  Define grabber as browser. This helps prevents timeouts.             #
-        opener=urllib.request.build_opener()
-        opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36')]
-        urllib.request.install_opener(opener)
         
-        #  Download and sort file based on group tag  #
-        if group == "5 Koikatsu":
-            print ("Downloading CharaCard" + chara_card + " for Koikatsu.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "Koikatsu/path/" + chara_card))
+        try:
+            #  Parse new link HTML #
+            r2 = requests.get(s)
+            r2_soup = bs4.BeautifulSoup(r2.text, "html.parser")
+
+            #  Search for original image link  #
+            image = r2_soup.find('meta', attrs={"property": "og:image"})
+            chara_link = (image.get('content'))
+
+            #  Get chara card file name  #
+            chara_card = chara_link.split('/')[-1]
+
+            #  Search for group tag (hs2, kk, etc)  #
+            tag = r2_soup.select('.description-meta')
+            tag2 = r2_soup.find('a', attrs={"rel":"tag"})
+            group = tag2.text
+
+            #  Define grabber as browser  #
+            opener=urllib.request.build_opener()
+            opener.addheaders=[('User-Agent','Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1941.0 Safari/537.36')]
+            urllib.request.install_opener(opener)
             
-        elif group == "A AI Syoujyo Cards" or group == "C HS2 Cards":
-            print ("Downloading CharaCard" + chara_card + " for HoneySelect2.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "HoneySelect2/path/" + chara_card))
-            
-        elif group == "6 KK Scenes":
-            print ("Downloading Scene" + chara_card + " for Koikatsu.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "KoikatsuScene/path/" + chara_card))
-            
-        elif group == "D HS2 Scenes" or group == "B AI Syoujyo Scenes":
-            print ("Downloading Scene" + chara_card + " for Honey Select 2.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "HoneySelect2Scene/path/" + chara_card))
-        
-        elif group == "7 HSU (1.0 cards)" or group == "8 HSU Scenes(1.0 scenes)":
-            print ("Downloading CharaCard" + chara_card + " for HSU 1.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "HoneySelectU/path" + chara_card))
-            
-        else:
-            print ("Downloading CharaCard" + chara_card + " with unknown group.")
-            urllib.request.urlretrieve(chara_link, (dest_dir + "other/path/" + chara_card))
+            #  Download and sort file based on group tag  #
+            if group == "5 Koikatsu":
+                print ("Downloading CharaCard" + chara_card + " for Koikatsu.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "kk/" + chara_card))
                 
-        #  If successful, append link to downloaded.txt to be used next time in comparison.  #
-        with open(downloaded, 'a') as f:
-            f.write(s + '\n')
+            elif group == "A AI Syoujyo Cards" or group == "C HS2 Cards":
+                print ("Downloading CharaCard" + chara_card + " for HoneySelect2.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "hs2/" + chara_card))
+                
+            elif group == "6 KK Scenes":
+                print ("Downloading Scene" + chara_card + " for Koikatsu.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "kksc/" + chara_card))
+                
+            elif group == "D HS2 Scenes" or group == "B AI Syoujyo Scenes":
+                print ("Downloading Scene" + chara_card + " for Honey Select 2.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "hs2sc/" + chara_card))
+            
+            elif group == "7 HSU (1.0 cards)" or group == "8 HSU Scenes(1.0 scenes)":
+                print ("Downloading CharaCard" + chara_card + " for HSU 1.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "questionable/HSU1/" + chara_card))
+                
+            else:
+                print ("Downloading CharaCard" + chara_card + " with unknown group.")
+                urllib.request.urlretrieve(chara_link, (dest_dir + "questionable/" + chara_card))
+                    
+            #  If successful, append link to downloaded.txt to avoid redundancy  #
+            with open(downloaded, 'a') as f:
+                f.write(s + '\n')
+                
+        except AttributeError:
+                #k  Add card link to "failed.txt" and "downloaded.txt" so it doesn't get parsed again.  #
+                print (chara_card + " failed somehow, added to failed list.")
+                with open(failed, 'a') as f:
+                    f.write(s + "\n")
+                with open(downloaded, 'a') as f:
+                    f.write(s + '\n')
+
 
 # Print new line for cron log  #
 print ("\n")
