@@ -10,6 +10,7 @@ With the DISCLAIMER in mind, I know that this script isn't perfect. For me, it w
 3) If possible, move away from depending on outside files, such as downloaded.txt, downloaded_new.txt, and html file. 
 4) Add support, either directly or seperately, for other Illusion card sharing sites.
 5) Add logic to sort out outfit/clothes cards from Chara cards.
+6) Add bs4 Error handling, especially when attempted downloads return NoneType.
 
 Description of script code can be found as comments in the script itself. The general idea of the script is to:
 
